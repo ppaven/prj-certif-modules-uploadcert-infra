@@ -1,0 +1,23 @@
+# Created by https://www.gitignore.io/api/terraform
+
+# VIM
+*.swp
+
+### Terraform ###
+# secrets
+secrets.tfvars
+# Compiled files
+*.tfstate
+*.tfstate.*
+*.backup
+
+# Module directory
+.terraform/
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# End of https://www.gitignore.io/api/terraform
+#
+._*
