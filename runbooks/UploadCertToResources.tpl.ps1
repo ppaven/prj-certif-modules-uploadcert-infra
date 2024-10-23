@@ -165,6 +165,7 @@ $ResourceTypeAll.Split("|") | ForEach {
 
         }
         "AGW" {
+            "AGW : Upload Certificate to keyvault ..."
             if ($KeyVault -ne "") {
                 try {
                     $null = Import-AzKeyVaultCertificate -VaultName $KeyVault -Name $CertificateName -FilePath $pfxPath -Password $securePassword
@@ -185,20 +186,21 @@ $ResourceTypeAll.Split("|") | ForEach {
             $appGateway = Add-AzApplicationGatewaySslCertificate -ApplicationGateway $appGateway -Name $DomainName -CertificateFile $pfxPath -Password $securePassword
 
             $cert = Get-AzApplicationGatewaySslCertificate -ApplicationGateway $appGateway -Name $DomainName
-            $fpHttpsPort = Get-AzApplicationGatewayFrontendPort -ApplicationGateway $appGateway
-            $fipconfig = Get-AzApplicationGatewayFrontendIPConfig -ApplicationGateway $appGateway
+            $fpHttpsPort = (Get-AzApplicationGatewayFrontendPort -ApplicationGateway $appGateway | Where-Object { $_.Port -eq "443" })
+            $fipconfig = (Get-AzApplicationGatewayFrontendIPConfig -ApplicationGateway $appGateway | Where-Object { $_.PublicIPAddress -NE $null })
+
             "AGW : Updating HTTPS Listener..."
             $null = Set-AzApplicationGatewayHttpListener -ApplicationGateway $appGateway -Name $EndPoint_Listener -Protocol Https -SslCertificate $cert -Hostname $DomainName -FrontendIPConfiguration $fipconfig -FrontendPort $fpHttpsPort
 
             "AGW : Saving changes..."
             # Commit the changes to Azure
             try {
-                Set-AzApplicationGateway -ApplicationGateway $appGateway
+                $null = Set-AzApplicationGateway -ApplicationGateway $appGateway
             } 
             catch {
                 Write-Error "Error on updating ApplicationGateway !"
                 $ErrorJob++
-            }  
+            }
         }
         {($_ -eq "VM") -or ($_ -eq "VMSS")}  {
             "VM : download update_cert.sh script ..."
